@@ -1,13 +1,13 @@
 '''
 AN-031 - Application note demonstrating control of AC power modules via QIS and saving the outputted QIS data to csv
 
-Automating via QIS is a lower overhead that running QPS (Quarch Power Studio) in full but still
-provides easy access to data for custom processing.  This example uses quarchpy functions to set up
+Automating via QIS is a lower overhead than running QPS (Quarch Power Studio) in full but still
+provides easy access to data for custom processing.  This example uses Quarchpy functions to set up
 an AC power module with QIS.
 
 There are several examples that run in series, these can be commented out if you want to simplify the actions:
 
-simpleStreamExample() - This example streams data to a python data structure
+simpleStreamExample() - This example streams data to a python data structure and then outputs the data to a csv file "stream-data.csv"
 
 QIS is distributed as part of the Quarchpy python package and does not require separate install
 
@@ -40,17 +40,12 @@ import os
 # Import other libraries used in the examples
 import time  # Used for sleep commands
 import logging  # Optionally used to create a log to help with debugging
-import xml.etree.ElementTree as ET
 
 from quarchpy.device import *
 from quarchpy.qis import *
 
 from io import StringIO
 from threading import Thread
-
-'''
-Select the device you want to connect to here!
-'''
 
 # Global variables to store last values and stream status
 csv_data_io = StringIO()  # Store stream data in memory
@@ -59,7 +54,7 @@ stream_running = False
 
 
 def main():
-    # If required you can enable python logging, quarchpy supports this and your log file
+    # If required you can enable python logging, Quarchpy supports this and your log file
     # will show the process of scanning devices and sending the commands.  Just comment out
     # the line below.  This can be useful to send to quarch if you encounter errors
     # logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
@@ -108,8 +103,8 @@ This example streams measurement data to file, by default in the same folder as 
 def simple_stream_example(module):
     global stream_running
 
-    print("Setting QIS resampling to 200ms")
-    module.streamResampleMode("200ms")
+    print("Setting QIS resampling to 125uS")
+    module.streamResampleMode("125uS")
 
     print("\nStarting Recording!")
     module.startStream(inMemoryData=csv_data_io, fileName=None)
@@ -133,7 +128,7 @@ def simple_stream_example(module):
     # Check stream status
     check_stream_status(module)
 
-    # Print & output the acquired data
+    # Print & output the acquired data to a csv file "stream-date.csv"
     process_qis_data(csv_data_io)
 
 
@@ -160,12 +155,13 @@ def read_and_print_last_values():
         # Process the latest stream data to update the cache
         process_stream_data()
 
-        # Get and print last values for L1 RMS Voltage and Current
+        # Get and print last values for L1 RMS Voltage, Current and Power
         l1_rms_voltage = get_last_value("L1_RMS mV")
         l1_rms_current = get_last_value("L1_RMS mA")
+        l1_p_app = get_last_value("L1_PApp mVA")
 
-        if l1_rms_voltage or l1_rms_current:
-            print(f"L1 RMS Voltage: {l1_rms_voltage}, L1 RMS Current: {l1_rms_current}")
+        if l1_rms_voltage or l1_rms_current or l1_p_app:
+            print(f"L1 RMS Voltage: {l1_rms_voltage}, L1 RMS Current: {l1_rms_current}, L1 RMS Power: {l1_p_app}")
 
         time.sleep(1)
 
